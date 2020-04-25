@@ -26,6 +26,19 @@ function fetchData() {
     });
 }
 
+async function saveTotalData(data, slug) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let docRef = db.collection('countriesTotal').doc(slug);
+            let setStats = await docRef.set({ slug: slug, data: data });
+            resolve(true);
+        } catch (error) {
+            console.log(error.message);
+            reject(error);
+        }
+    });
+}
+
 async function saveData(data) {
     return new Promise(async (resolve, reject) => {
         try {
@@ -45,3 +58,4 @@ async function saveData(data) {
 
 module.exports.fetchData = fetchData;
 module.exports.saveData = saveData;
+module.exports.saveTotalData = saveTotalData;

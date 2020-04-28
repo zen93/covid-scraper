@@ -12,9 +12,11 @@ router.get('/', async function(req, res, next) {
 });
 
 router.get('/covid-api', async function(req, res, next) {
+  req.setTimeout(300000);
   let error = null;
   try {
-    await apiSave.apiSave();
+    //await apiSave.apiSave();
+    await apiSave.apiSaveNew();
   }
   catch(err) {
     console.log(err.message);

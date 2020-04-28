@@ -26,6 +26,53 @@ function fetchData() {
     });
 }
 
+async function saveTest(data, slug) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let latestDoc = {}, latestDate = null;
+            let countryRef = db.collection('TestCollection').doc('countries').collection(slug);
+            let snapshot = await countryRef.orderBy('Date', 'desc').limit(1).get();
+            snapshot.forEach((doc) => {
+                if(doc.data()) {
+                    latestDoc = doc.data();
+                    latestDate = new Date(latestDoc.Date.toDate());
+                }
+            });            
+            
+            let begin = data.sort((a, b) => new Date(a.id) - new Date(b.id)).findIndex(el => {
+                if(!latestDate) return true;
+                return new Date(el.id) > latestDate;
+            });
+            
+            if(begin == -1) {
+                return resolve();
+            }
+            data = data.slice(begin, data.length);
+            
+            let count = 0;
+            const batchSize = 500;
+            while(count < data.length) {
+                let batch = db.batch();
+                let partData = data.slice(count, (data.length - count+batchSize) > 0 ? (count+batchSize) : data.length );
+                for(let d of partData) {
+                    let docId = d.id;
+                    let docRef = db.collection('TestCollection').doc('countries').collection(slug).doc(docId);
+
+                    delete d.id;
+                    d.slug = slug;
+                    batch.set(docRef, d);
+                }
+                count += batchSize;
+                await batch.commit();
+            }
+            resolve(true);
+        } catch (error) {
+            console.log(error.message);
+            reject(error);
+        }
+    });
+}
+
 async function saveTotalData(data, slug) {
     return new Promise(async (resolve, reject) => {
         try {
@@ -59,3 +106,4 @@ async function saveData(data) {
 module.exports.fetchData = fetchData;
 module.exports.saveData = saveData;
 module.exports.saveTotalData = saveTotalData;
+module.exports.saveTest = saveTest;
